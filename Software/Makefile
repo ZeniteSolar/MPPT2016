@@ -36,6 +36,9 @@ MCU 		?=	atmega328p
 F_CPU		?=	16000000UL
 # Optimization
 OPT=s
+# documentation (auto generated)
+DOXYFILE_INC	=	doxyfile.inc
+DOXYFILE_MK		=	doxyfile.mk
 
 ########### Project Settings ends here
 
@@ -94,7 +97,7 @@ HEX_EEPROM_FLAGS = \
 	--set-section-flags=.eeprom="alloc,load" \
 	--change-section-lma .eeprom=0 --no-change-warnings
 
-.PHONY: directories
+.PHONY: directories doc
 
 # all
 all: directories $(TARGET).elf size
@@ -109,7 +112,7 @@ size: $(TARGET).elf
 
 # clean
 ifneq ($(wildcard $(OBJS) $(TARGET).elf $(TARGET).hex $(TARGET).eep $(TARGET).map $(OBJS:%.o=%.d) $(OBJS:%.o=%.lst)), )
-clean:
+clean: rmdoc
 	-rm $(wildcard $(OBJS) $(TARGET).elf $(TARGET).hex $(TARGET).eep $(TARGET).map $(OBJS:%.o=%.d) $(OBJS:%.o=%.lst))
 else
 clean:
@@ -142,8 +145,25 @@ $(OBJDIR)/%.d: $(SRCDIR)/%.c
 	@echo ""
 	$(SILENT) $(CC) $(CFLAGS) -MM -MT $(addsuffix .o, $(basename $@)) -MF $@ $<
 
+## Docs
 
+# If makefile changes, maybe the list of sources has changed, so update doxygens list
 
+DOXYGEN		=	@doxygen
+
+doxyfile.inc:
+	$(SILENT) @mkdir -p $(DOCDIR)
+	@echo "INPUT = $(SRCDIR)" >> $(DOXYFILE_INC)
+	@echo "PROJECT_NAME = $(shell basename $(PRJDIR))" >> $(DOXYFILE_INC)
+	@echo "FILE_PATTERNS = *.h $(SRCS)" >> $(DOXYFILE_INC)
+
+doc: $(DOXYFILE_INC) $(SRCS)
+	@echo "Generating docs..."
+	@echo ""
+	$(SILENT) $(DOXYGEN) $(DOXYFILE_MK)
+
+rmdoc:
+	@rm -rf doc
 ###############
 
 
