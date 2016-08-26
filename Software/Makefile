@@ -48,7 +48,6 @@ TARGET = $(MAIN)
 SRCS	=	$(shell find $(SRCDIR) -type f -name \*.c)
 OBJS	=	$(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(SRCS:.c=.o))
 
-# Define compiler
 SILENT ?= @
 CROSS ?= avr-
 ifneq ($(CROSS), )
@@ -82,7 +81,7 @@ CFLAGS += \
 	-std=gnu99 \
 	-mmcu=$(MCU)
 
-LDFLAGS = -Wl,-Map=$(TARGET).map
+LDFLAGS = -Wl,-Map=$(OBJDIR)/$(TARGET).map
 
 ## Intel Hex file production flags
 HEX_FLASH_FLAGS = \
@@ -95,8 +94,14 @@ HEX_EEPROM_FLAGS = \
 	--set-section-flags=.eeprom="alloc,load" \
 	--change-section-lma .eeprom=0 --no-change-warnings
 
+.PHONY: directories
+
 # all
-all: $(TARGET).elf size
+all: directories $(TARGET).elf size
+
+# directories
+directories: 
+	$(SILENT) $(MKDIR_P) $(BINDIR) $(OBJDIR) $(DOCDIR) $(LIBDIR) $(SRCDIR)
 
 # size
 size: $(TARGET).elf
@@ -111,8 +116,9 @@ clean:
 	@echo "Nothing to clean."
 endif
 
-.SECONDARY:
+MKDIR_P := mkdir -p
 
+.SECONDARY:
 
 ## Link
 %.elf: $(OBJS)
@@ -122,6 +128,7 @@ endif
 
 %.hex: $(TARGET)
 	@echo "hex..:"
+	@echo ""
 	$(SILENT) $(OBJCPY) -O ihex $(HEX_FLASH_FLAGS)
  
 ## Compile
@@ -130,12 +137,16 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@echo ""
 	$(SILENT) $(CC) $(CFLAGS) -MMD -MF $(@:%.o=%.d) -c $< -o $@
 
-%.d: $(SRCDIR)/%.c
+$(OBJDIR)/%.d: $(SRCDIR)/%.c
 	@echo "[$(TARGET)] Generating dependency:" $@...
 	@echo ""
 	$(SILENT) $(CC) $(CFLAGS) -MM -MT $(addsuffix .o, $(basename $@)) -MF $@ $<
 
+
+
 ###############
+
+
 
 ## Programming
 
