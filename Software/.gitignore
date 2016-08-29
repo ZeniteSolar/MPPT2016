@@ -1,4 +1,5 @@
 # Ignore build dir
 bin
 build
+doc
 

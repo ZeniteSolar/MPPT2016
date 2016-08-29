@@ -37,8 +37,7 @@ F_CPU		?=	16000000UL
 # Optimization
 OPT=s
 # documentation (auto generated)
-DOXYFILE_INC	=	doxyfile.inc
-DOXYFILE_MK		=	doxyfile.mk
+DOXYFILE_MK		=	Doxyfile
 
 ########### Project Settings ends here
 
@@ -149,18 +148,11 @@ $(OBJDIR)/%.d: $(SRCDIR)/%.c
 
 # If makefile changes, maybe the list of sources has changed, so update doxygens list
 
-DOXYGEN		=	@doxygen
-
-doxyfile.inc:
-	$(SILENT) @mkdir -p $(DOCDIR)
-	@echo "INPUT = $(SRCDIR)" >> $(DOXYFILE_INC)
-	@echo "PROJECT_NAME = $(shell basename $(PRJDIR))" >> $(DOXYFILE_INC)
-	@echo "FILE_PATTERNS = *.h $(SRCS)" >> $(DOXYFILE_INC)
-
-doc: $(DOXYFILE_INC) $(SRCS)
+doc: $(SRCS)
 	@echo "Generating docs..."
 	@echo ""
-	$(SILENT) $(DOXYGEN) $(DOXYFILE_MK)
+	$(SILENT) @mkdir -p $(DOCDIR)
+	@echo $(cat $(DOXYFILE) ; echo INPUT = $(SRCDIR) ; echo PROJECT_NAME = $(shell basename $(PRJDIR))) | doxygen
 
 rmdoc:
 	@rm -rf doc
